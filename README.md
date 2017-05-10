@@ -1,5 +1,6 @@
 # SM E-Raffle API
 
+
 ## Description
 Python Serverless API for SM E-Raffle
 
@@ -37,7 +38,8 @@ Python Serverless API for SM E-Raffle
 
 ## API Endpoints and Responses
 
-`Get user details`
+
+### Get user details
 
 ```
 Endpoint: /user/{id}
@@ -67,7 +69,7 @@ Expected Response:
 }
 ```
 
-`Update user details`
+### Update user details
 
 ```
 Endpoint: /user/{id}
@@ -90,7 +92,7 @@ Body:
 }
 ```
 
-`Create new user`
+### Create new user
 
 ```
 Endpoint: /user/user
@@ -111,7 +113,7 @@ Body:
 }
 ```
 
-`Get all purchases of user by user_id`
+### Get all purchases of user by user_id
 
 ```
 Endpoint: /purchases?user_id={id}
@@ -135,7 +137,8 @@ Expected Response:
 ]
 ```
 
-`Delete a specific purchase item`
+
+### Delete a specific purchase item
 
 ```
 Endpoint: /purchases/{id}
