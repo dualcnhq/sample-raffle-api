@@ -4,6 +4,17 @@
 ## Description
 Python Serverless API for SM E-Raffle
 
+## Installation
+
+`git clone <repo_url>`
+`cd <repo_name>`
+`pip install virtualenv`
+`virtualenv --no-site-packages venv`
+`source venv/bin/activate`
+`pip install -r requirements.txt`
+
+
+
 ## Features
 - User registration
 - User login
@@ -27,9 +38,10 @@ Python Serverless API for SM E-Raffle
 | address           | transaction_date  |
 |  - street         | transaction_type  |
 |  - city           | date_created      |
-| gender            | campaign          |
-| mobile_number     |  - id             |
-| birthday          |  - name           |
+| num_entries       | campaign          |
+| gender            |  - id             |
+| mobile_number     |  - name           |
+| birthday          |                   |
 | accepted_terms    |                   |
 |  - campaign_ids   |                   |
 | date_created      |                   |
@@ -137,13 +149,28 @@ Expected Response:
 ]
 ```
 
-
 ### Delete a specific purchase item
 
 ```
 Endpoint: /purchases/{id}
 Method: DELETE
 Params: purchase_id
+```
+
+### Login
+
+```
+Endpoint: /login
+Method: POST
+Params:
+```
+
+### Forgot Password
+
+```
+Endpoint: /forgot_password
+Method: POST
+Params:
 ```
 
 ## Ideal Application Architecture
@@ -154,3 +181,6 @@ Params: purchase_id
 
 ## References
 - [Serverless Architecture Code Patterns](https://serverless.com/blog/serverless-architecture-code-patterns/)
+- [Setting Up DynamoDB Local](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
+
+- [Getting Started with Slam](http://slam-python.readthedocs.io/en/latest/tutorial.html)
