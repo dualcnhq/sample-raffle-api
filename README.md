@@ -185,10 +185,12 @@ Params:
     - login endpoint
     - verify email address and password from db
     - forgot password endpoint
-    - add user indexes
+    - add user indexes???
 
 - purchases
     - generate number of entries
+    - cascade delete user???
+    - get purchases by user_id
 
 - clean up and refactor
 
