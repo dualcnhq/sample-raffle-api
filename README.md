@@ -1,8 +1,12 @@
 # SM E-Raffle API
 
-
 ## Description
 Python Serverless API for SM E-Raffle
+
+## Contents
+- [Installation](#installation)
+- [Features](#features)
+
 
 ## Installation
 
@@ -12,6 +16,10 @@ Python Serverless API for SM E-Raffle
 `virtualenv --no-site-packages venv`
 `source venv/bin/activate`
 `pip install -r requirements.txt`
+
+Install _dynamodb_local_ (see [References](#references))
+
+Run API locally `python raffle_api.py`
 
 
 
@@ -26,6 +34,7 @@ Python Serverless API for SM E-Raffle
     - Generated based on Purchases
 - Generate printable coupon
 - Create a campaign id and name (hard-coded)
+
 
 ## Database Structure
 | User              | Purchases         |
@@ -46,7 +55,7 @@ Python Serverless API for SM E-Raffle
 |  - campaign_ids   |                   |
 | date_created      |                   |
 | date_updated      |                   |
-
+| last_login        |                   |
 
 ## API Endpoints and Responses
 
@@ -89,15 +98,12 @@ Method: PUT
 Params: user_id
 Body:
 {
-    "id": "",
     "first_name": "",
     "last_name": "",
     "email": "",
     "password": "",
-    "address": {
-        "street": "",
-        "city": "",
-    },
+    "street": "",
+    "city": "",
     "gender": "",
     "mobile_number": "",
     "birthday": ""
@@ -173,6 +179,20 @@ Method: POST
 Params:
 ```
 
+
+## TODOS
+- users
+    - login endpoint
+    - verify email address and password from db
+    - forgot password endpoint
+    - add user indexes
+
+- purchases
+    - generate number of entries
+
+- clean up and refactor
+
+
 ## Ideal Application Architecture
 - RestAPI (back-end code)
 - Events
@@ -184,3 +204,4 @@ Params:
 - [Setting Up DynamoDB Local](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
 
 - [Getting Started with Slam](http://slam-python.readthedocs.io/en/latest/tutorial.html)
+- [Getting Started with PynamoDB](http://pynamodb.readthedocs.io/en/latest/quickstart.html)
