@@ -196,12 +196,14 @@ Params:
     - verify email address and password from db
     - forgot password endpoint
     - add user indexes???
+    - add login session
 
 - purchases
     - generate number of entries
     - cascade delete user???
     - get purchases by user_id # implemented, not yet tested
 
+- field validations
 - clean up and refactor
 
 
@@ -214,6 +216,5 @@ Params:
 ## References
 - [Serverless Architecture Code Patterns](https://serverless.com/blog/serverless-architecture-code-patterns/)
 - [Setting Up DynamoDB Local](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
-
 - [Getting Started with Slam](http://slam-python.readthedocs.io/en/latest/tutorial.html)
 - [Getting Started with PynamoDB](http://pynamodb.readthedocs.io/en/latest/quickstart.html)
