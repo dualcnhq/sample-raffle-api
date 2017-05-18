@@ -124,6 +124,11 @@ def make_purchase(purchase):
         }
     }
 
+def update_user_raffle_entries(user_id, entry):
+    user = User.get(user_id)
+    user.num_of_entries = user.num_of_entries + entry
+    user.save()
+
 def isEmailValid(email):
     return re.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email) != None
 
@@ -263,7 +268,6 @@ def delete_user(user_id):
 @auth.login_required
 def get_purchases():
     user_id = request.args.get('user_id')      # get query param => ?user_id=<user_id>
-    print('get_purchases user_id: ', user_id)
     if user_id is None:
         return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan()]})
     else:
@@ -301,6 +305,12 @@ def create_purchase():
                 campaign = serialized_campaign,
                 date_created = dt)
     purchase.save()
+
+    if data.get('amount') >= 3000 and data.get('card_used') == 'Citibank':
+        update_user_entries(data.get('user_id'), 1)
+    elif data.get('amount') >= 3000 and data.get('card_used') == 'Citibank Paylite':
+        update_user_entries(data.get('user_id'), 2)
+
     return jsonify({'purchase': make_purchase(purchase)}), 201
 
 @app.route('/purchases/<purchase_id>', methods=['DELETE'])
