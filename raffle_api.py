@@ -2,6 +2,7 @@
 import boto3
 import datetime
 import os
+import re
 import uuid
 
 from flask import Flask, jsonify, abort, request, make_response, url_for
@@ -38,7 +39,6 @@ class User(Model):
     date_updated = UTCDateTimeAttribute()
     last_login = UTCDateTimeAttribute()
 
-
 class Purchase(Model):
     class Meta:
         table_name = os.environ.get('STAGE', 'dev') + '.purchases'
@@ -54,7 +54,6 @@ class Purchase(Model):
     transaction_type = UnicodeAttribute()
     campaign = MapAttribute()
     date_created = UTCDateTimeAttribute()
-
 
 # Auth & Response Messages
 @auth.get_password
@@ -125,6 +124,9 @@ def make_purchase(purchase):
         }
     }
 
+def isEmailValid(email):
+    return re.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email) != None
+
 ## Endpoints
 @app.route('/', methods=['GET'])
 def index():
@@ -160,18 +162,15 @@ def login():
     #return error
     return "login???"
 
-
 @app.route('/users', methods=['GET'])
 @auth.login_required
 def get_users():
     return jsonify({'users': [make_user(user) for user in User.scan()]})
 
-
 @app.route('/users/<user_id>', methods=['GET'])
 @auth.login_required
 def get_user(user_id):
     return jsonify({'user': make_user(User.get(user_id))})
-
 
 @app.route('/users', methods=['POST'])
 # @auth.login_required - no auth required in creating new user
@@ -196,6 +195,9 @@ def create_user():
     if data is None or 'first_name' not in data:
         abort(400)
 
+    if not isEmailValid(data['email']):
+        return jsonify({'error': 'Invalid email address format'}), 400
+
     user = User(
         id = uuid.uuid4().hex,
         first_name = data.get('first_name', ''),
@@ -213,17 +215,19 @@ def create_user():
     user.save()
     return jsonify({'user': make_user(user)}), 201
 
-
 @app.route('/users/<user_id>', methods=['PUT'])
 @auth.login_required
 def update_user(user_id):
-    user = User.get(user_id)
     attr = MapAttribute()
     data = request.get_json()
     dt = datetime.datetime.now(timezone('Asia/Manila'))
+    user = User.get(user_id)
 
     if not data:
         abort(400)
+
+    if not isEmailValid(data['email']):
+        return jsonify({'error': 'Invalid email address format'}), 400
 
     deserialized_address = attr.deserialize(user.address)
 
@@ -247,14 +251,12 @@ def update_user(user_id):
     user.save()
     return jsonify({'user': make_user(user)})
 
-
 @app.route('/users/<user_id>', methods=['DELETE'])
 @auth.login_required
 def delete_user(user_id):
     user = User.get(user_id)
     user.delete()
-    return make_response(jsonify({'message': 'Deleted successfully'})), 204
-
+    return jsonify({'message': 'User record was deleted'}), 200
 
 ## Purchases Endpoint
 @app.route('/purchases', methods=['GET'])
@@ -267,12 +269,10 @@ def get_purchases():
     else:
         return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan(user_id__eq=user_id)]})
 
-
 @app.route('/purchases/<purchase_id>', methods=['GET'])
 @auth.login_required
 def get_purchase(purchase_id):
     return jsonify({'purchase': make_purchase(Purchase.get(purchase_id))})
-
 
 @app.route('/purchases', methods=['POST'])
 @auth.login_required
@@ -303,14 +303,12 @@ def create_purchase():
     purchase.save()
     return jsonify({'purchase': make_purchase(purchase)}), 201
 
-
 @app.route('/purchases/<purchase_id>', methods=['DELETE'])
 @auth.login_required
 def delete_purchase(purchase_id):
     purchase = Purchase.get(purchase_id)
     purchase.delete()
-    return make_response(jsonify({'message': 'Deleted successfully'})), 204
-
+    return jsonify({'message': 'Purchase record was deleted'}), 200
 
 if __name__ == '__main__':
     User.create_table(read_capacity_units=1, write_capacity_units=1)
