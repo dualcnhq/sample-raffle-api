@@ -5,19 +5,37 @@ import os
 import re
 import uuid
 
-from flask import Flask, jsonify, abort, request, make_response, url_for
-from flask_httpauth import HTTPBasicAuth
+from flask import Flask, jsonify, abort, request, make_response, url_for, g
+from flask_httpauth import HTTPTokenAuth
+from itsdangerous import TimedJSONWebSignatureSerializer as JWT
 from pynamodb.models import Model
 from pynamodb.attributes import (
-    UnicodeAttribute, NumberAttribute, UTCDateTimeAttribute, MapAttribute
+    UnicodeAttribute, NumberAttribute, UTCDateTimeAttribute, MapAttribute, ListAttribute
 )
-from werkzeug.security import generate_password_hash, check_password_hash
+from pynamodb.indexes import GlobalSecondaryIndex, AllProjection, LocalSecondaryIndex
 from pytz import timezone
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-auth = HTTPBasicAuth()
+app.config['SECRET_KEY'] = 'top secret!'
+jwt = JWT(app.config['SECRET_KEY'], expires_in=3600)
+
+auth = HTTPTokenAuth('Bearer')
 
 # Database Model
+class UserEmailViewIndex(GlobalSecondaryIndex):
+    class Meta:
+        # You can override the index name by setting it below
+        index_name = "view_index"
+        read_capacity_units = 1
+        write_capacity_units = 1
+        # All attributes are projected
+        projection = AllProjection()
+    # This attribute is the hash key for the index
+    # Note that this attribute must also exist
+    # in the model
+    email = UnicodeAttribute(hash_key=True)
+
 class User(Model):
     class Meta:
         table_name = os.environ.get('STAGE', 'dev') + '.users'
@@ -29,12 +47,12 @@ class User(Model):
     last_name = UnicodeAttribute()
     email = UnicodeAttribute()
     password = UnicodeAttribute()
-    num_of_entries = NumberAttribute(default=0)
     address = MapAttribute()
     gender = UnicodeAttribute()
     mobile_number = UnicodeAttribute()
     birthday = UnicodeAttribute()
     accepted_terms = MapAttribute()
+    email_view_index = UserEmailViewIndex()
     date_created = UTCDateTimeAttribute()
     date_updated = UTCDateTimeAttribute()
     last_login = UTCDateTimeAttribute()
@@ -52,22 +70,23 @@ class Purchase(Model):
     card_used = UnicodeAttribute()
     transaction_date = UnicodeAttribute()
     transaction_type = UnicodeAttribute()
+    num_of_entries = NumberAttribute(default=0)
     campaign = MapAttribute()
     date_created = UTCDateTimeAttribute()
 
 # Auth & Response Messages
-@auth.get_password
-def get_password(email):  # TODO
-    print('email', email)
+@auth.verify_token
+def verify_token(token):
+    g.email = None
+    try:
+        data = jwt.loads(token)
+    except:
+        return False
+    if 'email' in data:
+        g.email = data['email']
+        return True
 
-    for user in User.scan(email__eq=email):
-        print('user', user.email)
-        print('userPassword', user.password)
-        print('passwordHash', check_password_hash(user.password, 'test'))
-
-    if email == 'admin':
-        return 'python'
-    return None
+    return False
 
 @auth.error_handler
 def unauthorized():
@@ -99,7 +118,6 @@ def make_user(user):
             'street': deserialized_address['street'],
             'city':  deserialized_address['city']
         },
-        'num_of_entries': user.num_of_entries,
         'gender': user.gender,
         'mobile_number': user.mobile_number,
         'birthday': user.birthday,
@@ -124,6 +142,7 @@ def make_purchase(purchase):
         'card_used': purchase.card_used,
         'transaction_date': purchase.transaction_date,
         'transaction_type': purchase.transaction_type,
+        'num_of_entries': purchase.num_of_entries,
         'date_created': purchase.date_created,
         'campaign': {
             'id': deserialized_campaign['campaign_id'],
@@ -131,13 +150,8 @@ def make_purchase(purchase):
         }
     }
 
-def update_user_raffle_entries(user_id, entry):
-    user = User.get(user_id)
-    user.num_of_entries = user.num_of_entries + entry
-    user.save()
-
 def delete_purchases_linked_to_user(user_id):
-    for purchase in Purchase.scan(user_id__eq=user_id):
+    for purchase in Purchase.query(user_id__eq=user_id):
         purchase.delete()
 
 def isEmailValid(email):
@@ -162,15 +176,19 @@ def index():
 ## Users Endpoint
 @app.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        data = request.get_json()
-        for user in User.scan(email__eq=data.get('email')):
-            if check_password_hash(user.password, data.get('password')):
-                return jsonify({'user': make_user(User.get(user.id))})
-            else:
-                return jsonify({'error': 'Wrong password'}), 400
+    data = request.get_json()
 
-        return jsonify({'error': 'Invalid user credentials'}), 400
+    if data is None or 'email' not in data or 'password' not in data:
+        abort(400)
+
+    for user in User.email_view_index.query(data.get('email')):
+        if check_password_hash(user.password, data.get('password')):
+            token = jwt.dumps({'email': data.get('email')})
+            return jsonify({'user': make_user(User.get(user.id)), 'token': token})
+        else:
+            return jsonify({'error': 'Wrong password'}), 400
+
+    return jsonify({'error': 'Invalid user credentials'}), 400
 
 
 @app.route('/users', methods=['GET'])
@@ -186,8 +204,15 @@ def get_user(user_id):
 @app.route('/users', methods=['POST'])
 # @auth.login_required - no auth required in creating new user
 def create_user():
+    attr = MapAttribute()
     dt = datetime.datetime.now(timezone('Asia/Manila')) #.strftime("%Y-%m-%d %H:%M:%S")
     data = request.get_json()
+
+    if data is None or 'first_name' not in data:
+        abort(400)
+
+    if not isEmailValid(data['email']):
+        return jsonify({'error': 'Invalid email address format'}), 400
 
     address_attribute = {
         'street' : data.get('street', ''),
@@ -199,15 +224,8 @@ def create_user():
         'campaign_name': '30thingstodoatmega'
     }
 
-    attr = MapAttribute()
     serialized_address = attr.serialize(address_attribute)
     serialized_campaign = attr.serialize(campaign_attribute)
-
-    if data is None or 'first_name' not in data:
-        abort(400)
-
-    if not isEmailValid(data['email']):
-        return jsonify({'error': 'Invalid email address format'}), 400
 
     user = User(
         id = uuid.uuid4().hex,
@@ -278,7 +296,7 @@ def get_purchases():
     if user_id is None:
         return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan()]})
     else:
-        return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan(user_id__eq=user_id)]})
+        return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.query(user_id__eq=user_id)]})
 
 @app.route('/purchases/<purchase_id>', methods=['GET'])
 @auth.login_required
@@ -302,6 +320,11 @@ def create_purchase():
     if data is None or 'amount' not in data:
         abort(400)
 
+    if data.get('amount') >= 3000 and data.get('card_used') == 'Citibank':
+        entries = 1
+    elif data.get('amount') >= 3000 and data.get('card_used') == 'Citibank Paylite':
+        entries = 2
+
     purchase = Purchase(id = uuid.uuid4().hex,
                 user_id = data.get('user_id', ''),
                 amount = data.get('amount', 0),
@@ -310,14 +333,9 @@ def create_purchase():
                 transaction_date = data.get('transaction_date', ''),
                 transaction_type = data.get('transaction_type', ''),
                 campaign = serialized_campaign,
+                num_of_entries = entries,
                 date_created = dt)
     purchase.save()
-
-    if data.get('amount') >= 3000 and data.get('card_used') == 'Citibank':
-        update_user_entries(data.get('user_id'), 1)
-    elif data.get('amount') >= 3000 and data.get('card_used') == 'Citibank Paylite':
-        update_user_entries(data.get('user_id'), 2)
-
     return jsonify({'purchase': make_purchase(purchase)}), 201
 
 @app.route('/purchases/<purchase_id>', methods=['DELETE'])
@@ -328,6 +346,6 @@ def delete_purchase(purchase_id):
     return jsonify({'message': 'Purchase record was deleted'}), 200
 
 if __name__ == '__main__':
-    User.create_table(read_capacity_units=1, write_capacity_units=1)
+    User.create_table(read_capacity_units=1, write_capacity_units=1, wait=True)
     Purchase.create_table(read_capacity_units=1, write_capacity_units=1)
     app.run(debug=True)
