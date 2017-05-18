@@ -6,28 +6,34 @@ Python API for SM E-Raffle using PynamoDB and Flask
 
 
 ## Contents
-- [Installation](#installation)
-- [Features](#features)
-- [Database Structure](#database-structure)
-- [API Endpoints](#api-endpoints-and-responses)
-- [References](#references)
+- [Installation](#Installation)
+- [Features](#Features)
+- [Database Structure](##database-structure)
+- [API Endpoints](##api-endpoints-and-responses)
+- [References](##references)
 
 
 ## Installation
 
-`git clone <repo_url>`
-`cd <repo_name>`
-`pip install virtualenv`
-`virtualenv --no-site-packages venv`
-`source venv/bin/activate`
-`pip install -r requirements.txt`
+- `git clone <repo_url>`
 
-Download _dynamodb_local_ (see [References](#references))
-Once the file was downloaded, run dynamodb_local `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb`
+- `cd <repo_name>`
 
-Run API locally `python raffle_api.py`
+- `pip install virtualenv`
 
-Access DynamoDB shell `localhost:8000/shell`
+- `virtualenv --no-site-packages venv`
+
+- `source venv/bin/activate`
+
+- `pip install -r requirements.txt`
+
+- Download _dynamodb_local_ (see [References](#references))
+
+- Once the file was downloaded, run dynamodb_local `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb`
+
+- Run API locally `python raffle_api.py`
+
+- Access DynamoDB shell `localhost:8000/shell`
 
 ## Features
 - User registration
