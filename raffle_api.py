@@ -58,6 +58,13 @@ class Purchase(Model):
 # Auth & Response Messages
 @auth.get_password
 def get_password(email):  # TODO
+    print('email', email)
+
+    for user in User.scan(email__eq=email):
+        print('user', user.email)
+        print('userPassword', user.password)
+        print('passwordHash', check_password_hash(user.password, 'test'))
+
     if email == 'admin':
         return 'python'
     return None
@@ -129,6 +136,10 @@ def update_user_raffle_entries(user_id, entry):
     user.num_of_entries = user.num_of_entries + entry
     user.save()
 
+def delete_purchases_linked_to_user(user_id):
+    for purchase in Purchase.scan(user_id__eq=user_id):
+        purchase.delete()
+
 def isEmailValid(email):
     return re.match('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email) != None
 
@@ -149,23 +160,18 @@ def index():
     )
 
 ## Users Endpoint
-@app.route('/login', methods=['POST', 'GET']) # TODO
+@app.route('/login', methods=['POST'])
 def login():
-    #error = None
     if request.method == 'POST':
         data = request.get_json()
-        print 'username: ' + data.get('email')
-        print 'password: ' + data.get('password')
+        for user in User.scan(email__eq=data.get('email')):
+            if check_password_hash(user.password, data.get('password')):
+                return jsonify({'user': make_user(User.get(user.id))})
+            else:
+                return jsonify({'error': 'Wrong password'}), 400
 
-        #if valid_login(request.form['username'],
-        #               request.form['password']):
-        #    return log_the_user_in(request.form['username'])
-        #else:
-        #    error = 'Invalid username/password'
-    # the code below is executed if the request method
-    # was GET or the credentials were invalid
-    #return error
-    return "login???"
+        return jsonify({'error': 'Invalid user credentials'}), 400
+
 
 @app.route('/users', methods=['GET'])
 @auth.login_required
@@ -261,6 +267,7 @@ def update_user(user_id):
 def delete_user(user_id):
     user = User.get(user_id)
     user.delete()
+    delete_purchases_linked_to_user(user_id)
     return jsonify({'message': 'User record was deleted'}), 200
 
 ## Purchases Endpoint
