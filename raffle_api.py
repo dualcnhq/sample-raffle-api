@@ -260,15 +260,12 @@ def delete_user(user_id):
 @app.route('/purchases', methods=['GET'])
 @auth.login_required
 def get_purchases():
-    return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan()]})
-
-
-@app.route('/purchases?user_id=<user_id>', methods=['GET'])
-@auth.login_required
-def get_purchases_by_user_id(user_id):
-    purchases_list = [make_purchase(purchase) for purchase in Purchase.scan(user_id__eq=user_id)]
-    print purchases_list
-    return jsonify({'purchases': [x for x in purchases_list if x['user_id'] == user_id]})
+    user_id = request.args.get('user_id')      # get query param => ?user_id=<user_id>
+    print('get_purchases user_id: ', user_id)
+    if user_id is None:
+        return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan()]})
+    else:
+        return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan(user_id__eq=user_id)]})
 
 
 @app.route('/purchases/<purchase_id>', methods=['GET'])
