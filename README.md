@@ -2,7 +2,7 @@
 
 
 ## Description
-Python API for SM E-Raffle using PynamoDB and Flask
+Python API for SM E-Raffle using PynamoDB and Flask with Slam for serverless deployment of Python APIs
 
 
 ## Contents
@@ -34,6 +34,10 @@ Python API for SM E-Raffle using PynamoDB and Flask
 - Run API locally `python raffle_api.py`
 
 - Access DynamoDB shell `localhost:8000/shell`
+
+- Accessing DynamoDB via CLI `pip install awscli`
+
+- Sample AWS Command `aws dynamodb list-tables --endpoint-url http://localhost:8000`
 
 ## Features
 - User registration
@@ -125,7 +129,7 @@ Body:
 ### Create new user
 
 ```
-Endpoint: /user/user
+Endpoint: /user
 Method: POST
 Body:
 {
@@ -212,15 +216,22 @@ Params:
     - login endpoint
     - verify email address and password from db
     - forgot password endpoint
-    - add user indexes???
+    - ~~add user indexes???~~ implemented for user email; need to test
+    - check other model scans
     - add login session
+    - add credit card
 
 - purchases
-    - generate number of entries
-    - cascade delete user???
-    - get purchases by user_id # implemented, not yet tested
+    - ~~generate number of entries~~ DONE
+    - ~~cascade delete user~~ DONE
+    - ~~get purchases by user_id~~ DONE
 
 - field validations
+    - check if first_name and last_name already exists
+    - transaction_date validations (shouldn't be able to enter date before current date and should be within promo period)
+
+- add CORS ([FlaskCORS](https://pypi.python.org/pypi/Flask-Cors))
+
 - clean up and refactor
 
 
