@@ -1,11 +1,16 @@
 # SM E-Raffle API
 
+
 ## Description
-Python Serverless API for SM E-Raffle
+Python API for SM E-Raffle using PynamoDB and Flask
+
 
 ## Contents
 - [Installation](#installation)
 - [Features](#features)
+- [Database Structure](#database-structure)
+- [API Endpoints](#api-endpoints-and-responses)
+- [References](#references)
 
 
 ## Installation
@@ -17,11 +22,12 @@ Python Serverless API for SM E-Raffle
 `source venv/bin/activate`
 `pip install -r requirements.txt`
 
-Install _dynamodb_local_ (see [References](#references))
+Download _dynamodb_local_ (see [References](#references))
+Once the file was downloaded, run dynamodb_local `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb`
 
 Run API locally `python raffle_api.py`
 
-
+Access DynamoDB shell `localhost:8000/shell`
 
 ## Features
 - User registration
@@ -121,10 +127,8 @@ Body:
     "last_name": "",
     "email": "",
     "password": "",
-    "address": {
-        "street": "",
-        "city": "",
-    },
+    "street": "",
+    "city": "",
     "gender": "",
     "mobile_number": "",
     "birthday": ""
@@ -190,7 +194,7 @@ Params:
 - purchases
     - generate number of entries
     - cascade delete user???
-    - get purchases by user_id
+    - get purchases by user_id # implemented, not yet tested
 
 - clean up and refactor
 
