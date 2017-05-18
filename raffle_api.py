@@ -58,8 +58,8 @@ class Purchase(Model):
 
 # Auth & Response Messages
 @auth.get_password
-def get_password(username):  # TODO
-    if username == 'admin':
+def get_password(email):  # TODO
+    if email == 'admin':
         return 'python'
     return None
 
@@ -79,9 +79,9 @@ def not_found(error):
 # Helper Functions
 def make_user(user):
     attr = MapAttribute()
-    print user.address['city']
-    # deserialized_address = attr.deserialize(user.address)
-    # deserialized_campaign = attr.deserialize(user.accepted_terms)
+
+    deserialized_address = attr.deserialize(user.address)
+    deserialized_campaign = attr.deserialize(user.accepted_terms)
 
     return {
         'id': user.id,
@@ -90,16 +90,16 @@ def make_user(user):
         'email': user.email,
         'password': user.password,
         'address': {
-            'street': user.address['street'],
-            'city': user.address['city']
+            'street': deserialized_address['street'],
+            'city':  deserialized_address['city']
         },
         'num_of_entries': user.num_of_entries,
         'gender': user.gender,
         'mobile_number': user.mobile_number,
         'birthday': user.birthday,
         'accepted_terms': {
-            'campaign_id': user.accepted_terms['campaign_id'],
-            'campaign_name': user.accepted_terms['campaign_name']
+            'campaign_id': deserialized_campaign['campaign_id'],
+            'campaign_name': deserialized_campaign['campaign_name']
         },
         'date_created': user.date_created,
         'date_updated': user.date_updated,
@@ -130,7 +130,7 @@ def make_purchase(purchase):
 def index():
     return jsonify(
         {
-            'name': 'user',
+            'name': 'users',
             'version': os.environ.get('LAMBDA_VERSION', 'dev'),
             'stage': os.environ['STAGE']
         },
@@ -147,7 +147,7 @@ def login():
     #error = None
     if request.method == 'POST':
         data = request.get_json()
-        print 'username: ' + data.get('username')
+        print 'username: ' + data.get('email')
         print 'password: ' + data.get('password')
 
         #if valid_login(request.form['username'],
@@ -185,8 +185,8 @@ def create_user():
     }
 
     campaign_attribute = {
-        'campaign_id' : 'campaign_123',
-        'campaign_name': 'SM Campaign'
+        'campaign_id' : '502ab6e7a856b67323a7206d74739118',
+        'campaign_name': '30thingstodoatmega'
     }
 
     attr = MapAttribute()
@@ -225,9 +225,11 @@ def update_user(user_id):
     if not data:
         abort(400)
 
+    deserialized_address = attr.deserialize(user.address)
+
     address_attribute = {
-        'street' : data.get('street', user.address['street'] or ''),
-        'city': data.get('city', user.address['city'] or '')
+        'street' : data.get('street', deserialized_address['street'] or ''),
+        'city': data.get('city', deserialized_address['city'] or '')
     }
 
     serialized_address = attr.serialize(address_attribute)
@@ -236,11 +238,12 @@ def update_user(user_id):
     user.last_name = data.get('last_name', user.last_name or '')
     user.email = data.get('email', user.email or '')
     user.password = generate_password_hash(data.get('password', user.password or ''))
-    user.address = address_attribute
+    user.address = serialized_address
     user.gender = data.get('gender', user.gender or '')
     user.mobile_number = data.get('mobile_number', user.mobile_number or '')
     user.birthday = data.get('birthday', user.birthday or '')
     user.date_updated = dt
+
     user.save()
     return jsonify({'user': make_user(user)})
 
@@ -277,15 +280,15 @@ def get_purchase(purchase_id):
 @app.route('/purchases', methods=['POST'])
 @auth.login_required
 def create_purchase():
+    attr = MapAttribute()
     dt = datetime.datetime.now(timezone('Asia/Manila'))
     data = request.get_json()
 
     campaign_attribute = {
-        'campaign_id' : 'campaign_123',
-        'campaign_name': 'SM Campaign'
+        'campaign_id' : '502ab6e7a856b67323a7206d74739118',
+        'campaign_name': '30thingstodoatmega'
     }
 
-    attr = MapAttribute()
     serialized_campaign = attr.serialize(campaign_attribute)
 
     if data is None or 'amount' not in data:
