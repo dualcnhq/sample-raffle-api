@@ -7,7 +7,9 @@ import uuid
 from flask import Flask, jsonify, abort, request, make_response, url_for
 from flask_httpauth import HTTPBasicAuth
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, NumberAttribute, UTCDateTimeAttribute
+from pynamodb.attributes import (
+    UnicodeAttribute, NumberAttribute, UTCDateTimeAttribute, MapAttribute
+)
 from werkzeug.security import generate_password_hash, check_password_hash
 from pytz import timezone
 
@@ -26,13 +28,12 @@ class User(Model):
     last_name = UnicodeAttribute()
     email = UnicodeAttribute()
     password = UnicodeAttribute()
-    street = UnicodeAttribute()
-    city = UnicodeAttribute()
     num_of_entries = NumberAttribute(default=0)
+    address = MapAttribute()
     gender = UnicodeAttribute()
     mobile_number = UnicodeAttribute()
     birthday = UnicodeAttribute()
-    # accepted_terms / campaign_id that user joined to
+    accepted_terms = MapAttribute()
     date_created = UTCDateTimeAttribute()
     date_updated = UTCDateTimeAttribute()
     last_login = UTCDateTimeAttribute()
@@ -51,8 +52,7 @@ class Purchase(Model):
     card_used = UnicodeAttribute()
     transaction_date = UnicodeAttribute()
     transaction_type = UnicodeAttribute()
-    campaign_id = UnicodeAttribute()
-    campaign_name = UnicodeAttribute()
+    campaign = MapAttribute()
     date_created = UTCDateTimeAttribute()
 
 
@@ -78,6 +78,11 @@ def not_found(error):
 
 # Helper Functions
 def make_user(user):
+    attr = MapAttribute()
+    print user.address['city']
+    # deserialized_address = attr.deserialize(user.address)
+    # deserialized_campaign = attr.deserialize(user.accepted_terms)
+
     return {
         'id': user.id,
         'first_name': user.first_name,
@@ -85,19 +90,26 @@ def make_user(user):
         'email': user.email,
         'password': user.password,
         'address': {
-            'street': user.street,
-            'city': user.city
+            'street': user.address['street'],
+            'city': user.address['city']
         },
         'num_of_entries': user.num_of_entries,
         'gender': user.gender,
         'mobile_number': user.mobile_number,
         'birthday': user.birthday,
+        'accepted_terms': {
+            'campaign_id': user.accepted_terms['campaign_id'],
+            'campaign_name': user.accepted_terms['campaign_name']
+        },
         'date_created': user.date_created,
         'date_updated': user.date_updated,
         'last_login': user.last_login
     }
 
 def make_purchase(purchase):
+    attr = MapAttribute()
+    deserialized_campaign = attr.deserialize(purchase.campaign)
+
     return {
         'id': purchase.id,
         'user_id': purchase.user_id,
@@ -108,8 +120,8 @@ def make_purchase(purchase):
         'transaction_type': purchase.transaction_type,
         'date_created': purchase.date_created,
         'campaign': {
-            'id': purchase.campaign_id,
-            'name': purchase.campaign_name
+            'id': deserialized_campaign['campaign_id'],
+            'name': deserialized_campaign['campaign_name']
         }
     }
 
@@ -162,10 +174,24 @@ def get_user(user_id):
 
 
 @app.route('/users', methods=['POST'])
-@auth.login_required
+# @auth.login_required - no auth required in creating new user
 def create_user():
     dt = datetime.datetime.now(timezone('Asia/Manila')) #.strftime("%Y-%m-%d %H:%M:%S")
     data = request.get_json()
+
+    address_attribute = {
+        'street' : data.get('street', ''),
+        'city': data.get('city', '')
+    }
+
+    campaign_attribute = {
+        'campaign_id' : 'campaign_123',
+        'campaign_name': 'SM Campaign'
+    }
+
+    attr = MapAttribute()
+    serialized_address = attr.serialize(address_attribute)
+    serialized_campaign = attr.serialize(campaign_attribute)
 
     if data is None or 'first_name' not in data:
         abort(400)
@@ -176,11 +202,11 @@ def create_user():
         last_name = data.get('last_name', ''),
         email = data.get('email', ''),
         password = generate_password_hash(data.get('password', '')),
-        street = data.get('street', ''),
-        city = data.get('city', ''),
         gender = data.get('gender', ''),
         mobile_number = data.get('mobile_number', ''),
         birthday = data.get('birthday', ''),
+        address = serialized_address,
+        accepted_terms = serialized_campaign,
         date_created = dt,
         date_updated = dt,
         last_login = dt)
@@ -192,17 +218,25 @@ def create_user():
 @auth.login_required
 def update_user(user_id):
     user = User.get(user_id)
+    attr = MapAttribute()
     data = request.get_json()
     dt = datetime.datetime.now(timezone('Asia/Manila'))
+
     if not data:
         abort(400)
+
+    address_attribute = {
+        'street' : data.get('street', user.address['street'] or ''),
+        'city': data.get('city', user.address['city'] or '')
+    }
+
+    serialized_address = attr.serialize(address_attribute)
 
     user.first_name = data.get('first_name', user.first_name or '')
     user.last_name = data.get('last_name', user.last_name or '')
     user.email = data.get('email', user.email or '')
     user.password = generate_password_hash(data.get('password', user.password or ''))
-    user.street = data.get('street', user.street or '')
-    user.city = data.get('city', user.city or '')
+    user.address = address_attribute
     user.gender = data.get('gender', user.gender or '')
     user.mobile_number = data.get('mobile_number', user.mobile_number or '')
     user.birthday = data.get('birthday', user.birthday or '')
@@ -226,6 +260,14 @@ def get_purchases():
     return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan()]})
 
 
+@app.route('/purchases?user_id=<user_id>', methods=['GET'])
+@auth.login_required
+def get_purchases_by_user_id(user_id):
+    purchases_list = [make_purchase(purchase) for purchase in Purchase.scan(user_id__eq=user_id)]
+    print purchases_list
+    return jsonify({'purchases': [x for x in purchases_list if x['user_id'] == user_id]})
+
+
 @app.route('/purchases/<purchase_id>', methods=['GET'])
 @auth.login_required
 def get_purchase(purchase_id):
@@ -238,8 +280,17 @@ def create_purchase():
     dt = datetime.datetime.now(timezone('Asia/Manila'))
     data = request.get_json()
 
+    campaign_attribute = {
+        'campaign_id' : 'campaign_123',
+        'campaign_name': 'SM Campaign'
+    }
+
+    attr = MapAttribute()
+    serialized_campaign = attr.serialize(campaign_attribute)
+
     if data is None or 'amount' not in data:
         abort(400)
+
     purchase = Purchase(id = uuid.uuid4().hex,
                 user_id = data.get('user_id', ''),
                 amount = data.get('amount', 0),
@@ -247,8 +298,7 @@ def create_purchase():
                 card_used = data.get('card_used', ''),
                 transaction_date = data.get('transaction_date', ''),
                 transaction_type = data.get('transaction_type', ''),
-                campaign_id = 'campaign_123',
-                campaign_name = 'SM Campaign',
+                campaign = serialized_campaign,
                 date_created = dt)
     purchase.save()
     return jsonify({'purchase': make_purchase(purchase)}), 201
