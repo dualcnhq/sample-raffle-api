@@ -145,6 +145,7 @@ Body:
 
 ```
 Endpoint: /purchases?user_id={id}
+Method: GET
 Params: user_id
 Expected Response:
 [
@@ -163,6 +164,22 @@ Expected Response:
         }
     }
 ]
+```
+
+### Add new purchase by user_id
+
+```
+Endpoint: /purchases
+Method: POST
+Body:
+{
+    "user_id": "",
+    "amount": 3000,
+    "store_name": "",
+    "card_used": "",
+    "transaction_date": "MM/DD/YY",
+    "transaction_type": ""
+}
 ```
 
 ### Delete a specific purchase item
