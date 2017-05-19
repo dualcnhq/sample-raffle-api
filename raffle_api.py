@@ -18,7 +18,7 @@ from pytz import timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', '')
 jwt = JWT(app.config['SECRET_KEY'], expires_in=3600)
 CORS(app)
 
@@ -167,6 +167,7 @@ def isEmailValid(email):
 ## Endpoints
 @app.route('/', methods=['GET'])
 def index():
+    print('SECRET_KEY', os.environ.get('SECRET_KEY'))
     return jsonify(
         {
             'name': 'users',
