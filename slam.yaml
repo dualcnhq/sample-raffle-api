@@ -31,6 +31,7 @@ stage_environments:
     # define stage specific variables here as "key: value" pairs
     SECRET_KEY: "85b0b1649cf6560e332d5cb56be4b5d3"
     STAGE: "Prod"
+
 # AWS specific options
 aws:
   # S3 bucket where lambda packages are stored
@@ -117,7 +118,14 @@ wsgi:
 #        write_throughput: 1
 #
 dynamodb_tables:
-  SmERaffleProdUsers:
+  SmERafflePurchases:
+    attributes:
+      id: S
+    key: id
+    read_throughput: 1
+    write_throughput: 1
+
+  SmERaffleUsers:
     attributes:
       id: S
     key: id
