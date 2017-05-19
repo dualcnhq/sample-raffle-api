@@ -13,7 +13,7 @@ Python API for SM E-Raffle using PynamoDB and Flask with Slam for serverless dep
 - [References](##references)
 
 
-## Installation
+## Installation and Running locally
 
 - `git clone <repo_url>`
 
@@ -30,6 +30,8 @@ Python API for SM E-Raffle using PynamoDB and Flask with Slam for serverless dep
 - Download _dynamodb_local_ (see [References](#references))
 
 - Once the file was downloaded, run dynamodb_local `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb`
+
+- Run `. ./setup.sh` to export environment variables
 
 - Run API locally `python raffle_api.py`
 
