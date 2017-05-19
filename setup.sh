@@ -1,5 +1,5 @@
-export SECRET_KEY='86a397433bb7c4c8116b3b4b5d763025'
-export STAGE='dev'
+export SECRET_KEY='ba6563b56a54ef3330670441e0b59524'
+export STAGE='Dev'
 
 # check if venv is present else make venv
 #if [[ ! -e $venv ]]; then
