@@ -1,0 +1,125 @@
+---
+# slam configuration file
+
+# the name and description of the project
+name: "sm-e-raffle-api"
+description: "Deployed with slam."
+
+# function details
+function:
+  module: "raffle_api"
+  app: "app"
+
+# location of the requirements file for the project
+requirements: "requirements.txt"
+
+# the name of the development stage
+devstage: "Dev"
+
+# environment variables common to all stages
+environment:
+  # define variables here as "key: value" pairs
+
+# environment variables specific to each stage
+# add or remove stages by editing the entries in this section
+stage_environments:
+  Dev:
+    # define stage specific variables here as "key: value" pairs
+    SECRET_KEY: "ba6563b56a54ef3330670441e0b59524"
+    STAGE: "Dev"
+  Prod:
+    # define stage specific variables here as "key: value" pairs
+    SECRET_KEY: "85b0b1649cf6560e332d5cb56be4b5d3"
+    STAGE: "Prod"
+# AWS specific options
+aws:
+  # S3 bucket where lambda packages are stored
+  s3_bucket: "raffle-api"
+
+  # timeout in seconds for the lambda function
+  lambda_timeout: 10
+
+  # memory in MB for the lambda function
+  lambda_memory: 128
+
+  # the lambda runtime to use, such as python2.7 or python3.6
+  lambda_runtime: "python2.7"
+
+  # list of VPC security groups for the lambda function
+  # leave empty if no VPC access is required
+  lambda_security_groups:
+
+  # list of VPC subnet IDs
+  # leave empty if no VPC access is required
+  lambda_subnet_ids:
+
+  # list of additional managed policies for the lambda function
+  lambda_managed_policies:
+
+  # list of additional inline policies for the lambda function
+  lambda_inline_policies:
+
+  # additional cloudformation resources to include in the deployment
+  cfn_resources:
+
+  # additional cloudformation outputs to include in the deployment
+  cfn_outputs:
+
+
+# WSGI Plugin
+#
+# This plugin implements an adapter that enables a WSGI complaint web application
+# to be deployed to AWS Lambda and API Gateway.
+#
+# wsgi:
+#   deploy_api_gateway: true
+#   log_stages:
+#     - dev
+#
+wsgi:
+  deploy_api_gateway: true
+  log_stages:
+  - Dev
+
+
+# DynamoDB Plugin
+#
+# This plugin provisions DynamoDB tables for each stage.
+#
+# dynamodb_tables:
+#   # a simple table with a single id key:
+#   mytable:
+#     attributes:
+#       id: "S"
+#     key: "id"
+#     read_throughput: 1
+#     write_throughput: 1
+#
+#   # a more complex example:
+#   mytable2:
+#    attributes:
+#      id: "S"
+#      name: "S"
+#      age: "N"
+#    key: ["id", "name"]
+#    read_throughput: 1
+#    write_throughput: 1
+#    local_secondary_indexes:
+#      myindex:
+#        key: ["id", "age"]
+#        project:
+#          - "name"
+#    global_secondary_indexes:
+#      myindex2:
+#        key: ["age", "name"]
+#        project: "all"
+#        read_throughput: 1
+#        write_throughput: 1
+#
+dynamodb_tables:
+  SmERaffleProdUsers:
+    attributes:
+      id: S
+    key: id
+    read_throughput: 1
+    write_throughput: 1
