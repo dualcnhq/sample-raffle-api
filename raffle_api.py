@@ -35,7 +35,7 @@ class UserEmailViewIndex(GlobalSecondaryIndex):
 
 class User(Model):
     class Meta:
-        table_name = os.environ.get('STAGE', 'dev') + '.users'
+        table_name = 'sme-raffle' + os.environ.get('STAGE', 'dev') + '.users'
         region = boto3.Session().region_name
         host = 'http://localhost:8000' \
             if not os.environ.get('LAMBDA_TASK_ROOT') else None
@@ -65,7 +65,7 @@ class PurchaseUserViewIndex(GlobalSecondaryIndex):
 
 class Purchase(Model):
     class Meta:
-        table_name = os.environ.get('STAGE', 'dev') + '.purchases'
+        table_name = 'sme-raffle' + os.environ.get('STAGE', 'dev') + '.purchases'
         region = boto3.Session().region_name
         host = 'http://localhost:8000' \
             if not os.environ.get('LAMBDA_TASK_ROOT') else None
