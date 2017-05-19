@@ -57,6 +57,20 @@ class User(Model):
     date_updated = UTCDateTimeAttribute()
     last_login = UTCDateTimeAttribute()
 
+
+class PurchaseUserViewIndex(GlobalSecondaryIndex):
+    class Meta:
+        # You can override the index name by setting it below
+        index_name = "view_index"
+        read_capacity_units = 1
+        write_capacity_units = 1
+        # All attributes are projected
+        projection = AllProjection()
+    # This attribute is the hash key for the index
+    # Note that this attribute must also exist
+    # in the model
+    user_id = UnicodeAttribute(hash_key=True)
+
 class Purchase(Model):
     class Meta:
         table_name = os.environ.get('STAGE', 'dev') + '.purchases'
@@ -72,6 +86,7 @@ class Purchase(Model):
     transaction_type = UnicodeAttribute()
     num_of_entries = NumberAttribute(default=0)
     campaign = MapAttribute()
+    user_view_index = PurchaseUserViewIndex()
     date_created = UTCDateTimeAttribute()
 
 # Auth & Response Messages
@@ -296,7 +311,7 @@ def get_purchases():
     if user_id is None:
         return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.scan()]})
     else:
-        return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.query(user_id__eq=user_id)]})
+        return jsonify({'purchases': [make_purchase(purchase) for purchase in Purchase.user_view_index.query(user_id)]})
 
 @app.route('/purchases/<purchase_id>', methods=['GET'])
 @auth.login_required
@@ -320,7 +335,7 @@ def create_purchase():
     if data is None or 'amount' not in data:
         abort(400)
 
-    if data.get('amount') >= 3000 and data.get('card_used') == 'Citibank':
+    if data.get('amount') >= 3000 and data.get('card_used') != 'Citibank Paylite':
         entries = 1
     elif data.get('amount') >= 3000 and data.get('card_used') == 'Citibank Paylite':
         entries = 2
