@@ -23,11 +23,11 @@ environment:
 # environment variables specific to each stage
 # add or remove stages by editing the entries in this section
 stage_environments:
-  Dev:
+  dev:
     # define stage specific variables here as "key: value" pairs
     SECRET_KEY: "ba6563b56a54ef3330670441e0b59524"
     STAGE: "dev"
-  Prod:
+  prod:
     # define stage specific variables here as "key: value" pairs
     SECRET_KEY: "85b0b1649cf6560e332d5cb56be4b5d3"
     STAGE: "prod"
