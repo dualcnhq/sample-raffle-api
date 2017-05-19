@@ -73,6 +73,57 @@ Python API for SM E-Raffle using PynamoDB and Flask with Slam for serverless dep
 | date_updated      |                   |
 | last_login        |                   |
 
+
+## Using Slam (for more details please look for Getting Started with Slam in References)
+
+- Configure Slam
+    `slam init raffle_api:app --wsgi --stages dev,prod --dynamodb-tables purchases --dynamodb-tables users`
+
+- Setup AWS Credentials
+    `pip install awscli`
+
+- Configure AWS
+    `aws configure`
+
+    ```
+    (venv) $ aws configure
+    AWS Access Key ID [None]:
+    AWS Secret Access Key [None]:
+    Default region name [None]:
+    Default output format [None]:
+    ```
+
+- Deploy (Sample Scenario)
+    ```
+    (venv) $ slam deploy
+    Building lambda package...
+    Deploying simple-api...
+    simple-api is deployed!
+      dev: https://ukhhy78b6a.execute-api.us-west-2.amazonaws.com/dev
+      prod: https://ukhhy78b6a.execute-api.us-west-2.amazonaws.com/prod
+    ```
+
+- Publish to `prod`
+    ```
+    (venv) $ slam publish prod
+    Publishing simple-api:dev to prod...
+    simple-api is deployed!
+      dev: https://ukhhy78b6a.execute-api.us-west-2.amazonaws.com/dev
+      prod:1: https://ukhhy78b6a.execute-api.us-west-2.amazonaws.com/prod
+    ```
+
+- Check for project status
+    ```
+    (venv) $ slam status
+    simple-api is deployed!
+      dev: https://ukhhy78b6a.execute-api.us-west-2.amazonaws.com/dev
+      prod:1: https://ukhhy78b6a.execute-api.us-west-2.amazonaws.com/prod
+    ```
+
+- Delete project
+    `slam delete`
+
+
 ## API Endpoints and Responses
 
 
@@ -213,21 +264,24 @@ Params:
 
 ## TODOS
 - users
-    - login endpoint
-    - verify email address and password from db
     - forgot password endpoint
-    - ~~add user indexes???~~ implemented for user email; need to test
-    - check other model scans
-    - add login session
     - add credit card
+        - use BIN numbers
+    - ~~login endpoint~~ **FOR TESTING**
+    - ~~verify email address and password from db~~ **FOR TESTING**
+    - ~~add user indexes???~~ **FOR TESTING**
+    - ~~add login session~~ **FOR TESTING**
 
 - purchases
     - ~~generate number of entries~~ DONE
     - ~~cascade delete user~~ DONE
     - ~~get purchases by user_id~~ DONE
 
-- field validations
+- check other model scans for User and Purchases (getAll records)
+
+- validations
     - check if first_name and last_name already exists
+    - check if email already exists
     - transaction_date validations (shouldn't be able to enter date before current date and should be within promo period)
 
 - add CORS ([FlaskCORS](https://pypi.python.org/pypi/Flask-Cors))
