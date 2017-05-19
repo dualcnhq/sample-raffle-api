@@ -14,7 +14,7 @@ function:
 requirements: "requirements.txt"
 
 # the name of the development stage
-devstage: "Dev"
+devstage: "dev"
 
 # environment variables common to all stages
 environment:
@@ -26,16 +26,16 @@ stage_environments:
   Dev:
     # define stage specific variables here as "key: value" pairs
     SECRET_KEY: "ba6563b56a54ef3330670441e0b59524"
-    STAGE: "Dev"
+    STAGE: "dev"
   Prod:
     # define stage specific variables here as "key: value" pairs
     SECRET_KEY: "85b0b1649cf6560e332d5cb56be4b5d3"
-    STAGE: "Prod"
+    STAGE: "prod"
 
 # AWS specific options
 aws:
   # S3 bucket where lambda packages are stored
-  s3_bucket: "raffle-api"
+  s3_bucket: "sm-e-raffle-api"
 
   # timeout in seconds for the lambda function
   lambda_timeout: 10
@@ -80,7 +80,7 @@ aws:
 wsgi:
   deploy_api_gateway: true
   log_stages:
-  - Dev
+  - dev
 
 
 # DynamoDB Plugin
