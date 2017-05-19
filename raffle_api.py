@@ -6,6 +6,7 @@ import re
 import uuid
 
 from flask import Flask, jsonify, abort, request, make_response, url_for, g
+from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 from itsdangerous import TimedJSONWebSignatureSerializer as JWT
 from pynamodb.models import Model
@@ -17,23 +18,19 @@ from pytz import timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'top secret!'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 jwt = JWT(app.config['SECRET_KEY'], expires_in=3600)
+CORS(app)
 
 auth = HTTPTokenAuth('Bearer')
 
 # Database Model
 class UserEmailViewIndex(GlobalSecondaryIndex):
     class Meta:
-        # You can override the index name by setting it below
         index_name = "view_index"
         read_capacity_units = 1
         write_capacity_units = 1
-        # All attributes are projected
         projection = AllProjection()
-    # This attribute is the hash key for the index
-    # Note that this attribute must also exist
-    # in the model
     email = UnicodeAttribute(hash_key=True)
 
 class User(Model):
@@ -60,15 +57,10 @@ class User(Model):
 
 class PurchaseUserViewIndex(GlobalSecondaryIndex):
     class Meta:
-        # You can override the index name by setting it below
         index_name = "view_index"
         read_capacity_units = 1
         write_capacity_units = 1
-        # All attributes are projected
         projection = AllProjection()
-    # This attribute is the hash key for the index
-    # Note that this attribute must also exist
-    # in the model
     user_id = UnicodeAttribute(hash_key=True)
 
 class Purchase(Model):
@@ -217,7 +209,6 @@ def get_user(user_id):
     return jsonify({'user': make_user(User.get(user_id))})
 
 @app.route('/users', methods=['POST'])
-# @auth.login_required - no auth required in creating new user
 def create_user():
     attr = MapAttribute()
     dt = datetime.datetime.now(timezone('Asia/Manila')) #.strftime("%Y-%m-%d %H:%M:%S")
