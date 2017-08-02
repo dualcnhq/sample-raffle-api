@@ -1,4 +1,4 @@
-# SM E-Raffle API
+# Sample API for a Raffle app
 
 
 ## Description
