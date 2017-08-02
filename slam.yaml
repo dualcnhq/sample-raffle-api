@@ -2,7 +2,7 @@
 # slam configuration file
 
 # the name and description of the project
-name: "sm-e-raffle-api"
+name: "raffle-api"
 description: "Deployed with slam."
 
 # function details
@@ -35,7 +35,7 @@ stage_environments:
 # AWS specific options
 aws:
   # S3 bucket where lambda packages are stored
-  s3_bucket: "sm-e-raffle-api"
+  s3_bucket: "raffle-api"
 
   # timeout in seconds for the lambda function
   lambda_timeout: 10
@@ -118,14 +118,14 @@ wsgi:
 #        write_throughput: 1
 #
 dynamodb_tables:
-  SmERafflePurchases:
+  Purchases:
     attributes:
       id: S
     key: id
     read_throughput: 1
     write_throughput: 1
 
-  SmERaffleUsers:
+  Users:
     attributes:
       id: S
     key: id

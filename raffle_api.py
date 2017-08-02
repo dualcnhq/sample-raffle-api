@@ -35,7 +35,7 @@ class UserEmailViewIndex(GlobalSecondaryIndex):
 
 class User(Model):
     class Meta:
-        table_name = 'SmERaffleUsers'
+        table_name = 'Users'
         region = boto3.Session().region_name
         host = 'http://localhost:8000' \
             if not os.environ.get('LAMBDA_TASK_ROOT') else None
@@ -65,7 +65,7 @@ class PurchaseUserViewIndex(GlobalSecondaryIndex):
 
 class Purchase(Model):
     class Meta:
-        table_name = 'SmERafflePurchases'
+        table_name = 'Purchases'
         region = boto3.Session().region_name
         host = 'http://localhost:8000' \
             if not os.environ.get('LAMBDA_TASK_ROOT') else None
@@ -319,7 +319,7 @@ def create_purchase():
 
     campaign_attribute = {
         'campaign_id' : '502ab6e7a856b67323a7206d74739118',
-        'campaign_name': '30thingstodoatmega'
+        'campaign_name': 'sample_campaign'
     }
 
     serialized_campaign = attr.serialize(campaign_attribute)
@@ -327,9 +327,9 @@ def create_purchase():
     if data is None or 'amount' not in data:
         abort(400)
 
-    if data.get('amount') >= 3000 and data.get('card_used') != 'Citibank Paylite':
+    if data.get('amount') >= 3000 and data.get('card_used') != 'Paylite':
         entries = 1
-    elif data.get('amount') >= 3000 and data.get('card_used') == 'Citibank Paylite':
+    elif data.get('amount') >= 3000 and data.get('card_used') == 'Paylite':
         entries = 2
 
     purchase = Purchase(id = uuid.uuid4().hex,

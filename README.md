@@ -2,7 +2,7 @@
 
 
 ## Description
-Python API for SM E-Raffle using PynamoDB and Flask with Slam for serverless deployment of Python APIs
+Python API for an E-Raffle app using PynamoDB and Flask with Slam for serverless deployment of Python APIs
 
 
 ## Contents
@@ -262,33 +262,6 @@ Endpoint: /forgot_password
 Method: POST
 Params:
 ```
-
-
-## TODOS
-- users
-    - forgot password endpoint
-    - add credit card
-        - use BIN numbers
-    - ~~login endpoint~~ **FOR TESTING**
-    - ~~verify email address and password from db~~ **FOR TESTING**
-    - ~~add user indexes???~~ **FOR TESTING**
-    - ~~add login session~~ **FOR TESTING**
-
-- purchases
-    - ~~generate number of entries~~ DONE
-    - ~~cascade delete user~~ DONE
-    - ~~get purchases by user_id~~ DONE
-
-- check other model scans for User and Purchases (getAll records)
-
-- validations
-    - check if first_name and last_name already exists
-    - check if email already exists
-    - transaction_date validations (shouldn't be able to enter date before current date and should be within promo period)
-
-- add CORS ([FlaskCORS](https://pypi.python.org/pypi/Flask-Cors))
-
-- clean up and refactor
 
 
 ## Ideal Application Architecture
